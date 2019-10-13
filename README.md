@@ -23,18 +23,18 @@ j是整数；k是整型常量；p是指向整型常量的指针；j2，k2是整�
 	#include<typeinfo>
 	
 	int main()
-	{     const int i=42;
-	      auto j=i;
-	const auto &k=i;
-	auto *p=&i;
-	const auto j2=i,&k2=i;
-	std::cout << typeid(i).name() << std::endl;
-	std::cout << typeid(j).name() << std::endl;
-	std::cout << typeid(k).name() << std::endl;
-	std::cout << typeid(p).name() << std::endl;
-	std::cout << typeid(j2).name() << std::endl;
-	std::cout << typeid(k2).name() << std::endl;
-	return 0;
+	{       const int i=42;
+	        auto j=i;
+		const auto &k=i;
+		auto *p=&i;
+		const auto j2=i,&k2=i;
+		std::cout << typeid(i).name() << std::endl;
+		std::cout << typeid(j).name() << std::endl;
+		std::cout << typeid(k).name() << std::endl;
+		std::cout << typeid(p).name() << std::endl;
+		std::cout << typeid(j2).name() << std::endl;
+		std::cout << typeid(k2).name() << std::endl;
+		return 0;
 	}
 
 3.4  
@@ -48,7 +48,7 @@ j是整数；k是整型常量；p是指向整型常量的指针；j2，k2是整�
 	using namespace std;
 	
 	int main()
-	{            string s1,s2;
+	{             string s1,s2;
 	              cout << "请输入两个字符串: " << endl;
 	              cin >> s1 >> s2;
 	              if(s1 == s2)
@@ -190,18 +190,18 @@ j是整数；k是整型常量；p是指向整型常量的指针；j2，k2是整�
 	#include<iostream>
 	using namespace std;
 	void mySWAP(int *p,int*q)
-	{          int *tmp=p;
-	p=q;
-	q=tmp;
+	{       int *tmp=p;
+		p=q;
+		q=tmp;
 	}
 	int main()
 	{
-	int a=5,b=10;
-	int *r=&a,*s=&b;
-	cout<<"交换前: a="<<",b="<<b<<endl;
-	mySWAP(r,s);
-	cout<<"交换后: a="<<",b="<<b<<endl;
-	return 0;
+		int a=5,b=10;
+		int *r=&a,*s=&b;
+		cout<<"交换前: a="<<",b="<<b<<endl;
+		mySWAP(r,s);
+		cout<<"交换后: a="<<",b="<<b<<endl;
+		return 0;
 	}
 
 6.19
@@ -229,30 +229,30 @@ private隐藏类的相关实现细节，实现封装。
 	class Screen
 	{
 	private:
-	unsigned height=0,width=0;
-	usigned cursor=0;
-	string contents;
+		unsigned height=0,width=0;
+		usigned cursor=0;
+		string contents;
 	public:
-	Screen()=default;
-	Screen(unsigned ht,unsigned wd) :height(ht),width(wd),contents(ht*wd,' ') { }
-	Screen(unsigned ht,unsigned wd,char c)
-	   : height(ht),width(wd),contents(ht*wd,c){ }
+		Screen()=default;
+		Screen(unsigned ht,unsigned wd) :height(ht),width(wd),contents(ht*wd,' ') { }
+		Screen(unsigned ht,unsigned wd,char c)
+		   : height(ht),width(wd),contents(ht*wd,c){ }
 	public:
-	Screen&move(unsigned r,unsigned c)
-	{cursor =r*width+c;
-	return this;
-	}
-	Screen&set(char ch)
-	{contents[cursor]=ch;
-	return *this;
-	}
-	Screen&set(unsigned r,unsigned c,char ch)
-	{contents[r*width+c]=ch;
-	return *this;
-	}
-	Screen&display()
-	{cout<<contents;
-	return *this;
+		Screen&move(unsigned r,unsigned c)
+		{cursor =r*width+c;
+		return this;
+		}
+		Screen&set(char ch)
+		{contents[cursor]=ch;
+		return *this;
+		}
+		Screen&set(unsigned r,unsigned c,char ch)
+		{contents[r*width+c]=ch;
+		return *this;
+		}
+		Screen&display()
+		{cout<<contents;
+		return *this;
 	      }
 	};
 
