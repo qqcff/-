@@ -255,6 +255,8 @@ private隐藏类的相关实现细节，实现封装。
 		return *this;
 	      }
 	};
+	
+	
 	运行结果：
 	XXXXXXXXXXXXXXXXXXXX#XXXX
 	XXXXXXXXXXXXXXXXXXXX#XXXX
