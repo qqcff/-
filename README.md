@@ -1,272 +1,978 @@
-# -2.23
--------  
-把它初始化为nullptr或者0，这样程序就能检测并知道它有没有指向一个具体的对象了，在此前提下，判断p是否指向合法的对象，只需把p作为if的条件即可，如果怕的值是nullptr，则条件为假，反之，条件为真。
-
-2.24
+# 9.11
 ----------  
-p是合法的，因为void*是一种特殊的指针类型，可用于存放任意对象的地址。
-lp是合法的，因为lp是一个长整型指针，而i只是一个普通型整数，二者的类型不匹配。
 
-2.25
+
+	vector<int> vec;    // 0
+
+	vector<int> vec(10);    // 0
+
+	vector<int> vec(10,1);  // 1
+
+	vector<int> vec{1,2,3,4,5}; // 1,2,3,4,5
+
+	vector<int> vec(other_vec); 
+
+	vector<int> vec(other_vec.begin(), other_vec.end());  
+
+
+9.20
 -------  
-(a)ip是一个整型指针，指向一个整型数，它的值是所指整型数在内存中的地址；i是一个整型数；r是一个引用，它绑定了i，r的值就是i的值。
-(b)i是一个整型数；ip是一个整型指针，它的值被初始化为0.
-(c)ip是一个整型指针，指向一个整型数它的值是所指整型数在内存中的地址；ip2是一个整型数。
-
-2.35  
----------
-j是整数；k是整型常量；p是指向整型常量的指针；j2，k2是整数。  
-程序：
-
-
-	#inlclude<iostream>
-	#include<typeinfo>
-	
-	int main()
-	{       const int i=42;
-	        auto j=i;
-		const auto &k=i;
-		auto *p=&i;
-		const auto j2=i,&k2=i;
-		std::cout << typeid(i).name() << std::endl;
-		std::cout << typeid(j).name() << std::endl;
-		std::cout << typeid(k).name() << std::endl;
-		std::cout << typeid(p).name() << std::endl;
-		std::cout << typeid(j2).name() << std::endl;
-		std::cout << typeid(k2).name() << std::endl;
-		return 0;
-	}
-
-3.4  
--------
-比较字符串大小
 
 
 	#include<iostream>
+
+	#include<fstream>
+
+	#include<sstream>
+
 	#include<string>
-	
+
+	#include<vector>
+
+	#include<list>
+
+	#include<deque>
+
 	using namespace std;
+
+
+
+	int main(int argc, char**argv)
+
+	{
+
+		list<int> list1(5,7);
+
+		deque<int> deque1;
+
+		deque<int> deque2;
+
+		list<int>::iterator it1 = list1.begin();
+
+		for (it1; it1 != list1.end(); it1++)
+
+		{
+
+			if ((*it1)%2 == 0)
+
+			{
+
+				deque1.push_back(*it1);
+
+			} 
+
+			else
+
+			{
+
+				deque2.push_back(*it1);
+
+			}
+
+		}
+
+
+
+		deque<int>::iterator it2 = deque1.begin();
+
+		deque<int>::iterator it3 = deque2.begin();
+
+		cout<<"偶数为：";
+
+		for (it2; it2 != deque1.end(); it2++)
+
+		{
+
+			cout<<*it2<<" ";
+
+		}
+
+		cout<<endl;
+
+		cout<<"奇数为：";
+
+		for (it3; it3 != deque2.end(); it3++)
+
+		{
+
+			cout<<*it3<<" ";
+
+		}
+
+
+
+		return 0;
+
+	}  
+
+9.29 
+---------
+resize()改变容器的大小，多删少补并初始化，需要默认初始化的，则需要参数类型有默认构造函数。  
+resize(100)会将其大小改为100个元素的大小，添加新元素并初始化，之后使用resize(10)会将之后的90个元素舍弃。  
+9.43
+-------  
+
+
+
 	
+	#include <iostream>
+
+	#include <string>
+
+	#include <vector>
+
+	using std::cin;
+
+	using std::cout;
+
+	using std::cerr;
+
+	using std::endl;
+
+	using std::vector;
+
+	using std::string;
+
+
+
+	void rePlace(string &s, const string &oldVal, const string &newVal)
+
+	{
+
+		auto l = oldVal.size();
+
+		if (!l)
+
+			return;
+
+		auto iter = s.begin();
+
+		while (iter <= s.end()-1) {
+
+			auto iter1 = iter;
+
+			auto iter2 = oldVal.begin();
+
+			while(iter != oldVal.end() && *iter1 == *iter2) {
+
+				++iter1;
+
+				++iter2;
+
+			}
+
+			if(iter2 == oldVal.end()) {
+
+				iter = s.erase(iter, iter1);
+
+				if (newVal.size()) {
+
+					iter2 = newVal.end();
+
+					do {
+
+						--iter2;
+
+						iter = s.insert(iter, *iter2);
+
+					} while(iter2 > newVal.begin());
+
+				}
+
+				iter += newVal.size();
+
+			}
+
+			else ++iter;
+
+		}
+
+	}
+
+
+
 	int main()
-	{             string s1,s2;
-	              cout << "请输入两个字符串: " << endl;
-	              cin >> s1 >> s2;
-	              if(s1 == s2)
-	                     cout << "两个字符串相等" << endl;
-	              else if (s1 > s2)
-	                     cout << s1 << "大于 " << s2 << endl;
-	              else
-	                     cout << s2 << "大于 " << s1 << endl;
-	              return 0;
-	}
-字符串长度比较 
- 
-	#include <iostream>
-	#include <string>
-	using namespace std;
-	void main()
-	{	
-		string mystring1 , mystring2;
-		cin>>mystring1>>mystring2;
-		if (mystring1.size() != mystring2.size())
-		{
-			cout<<(mystring1.size() >= mystring2.size() ? mystring1 : mystring2)<<endl;
-		}
-		else
-		{
-			cout<<"The length of these strings are the same!"<<endl;
-		}	
+
+	{
+
+		string s = "tho thru tho!";
+
+		rePlace(s, "thru", "through");
+
+		cout<<s<<endl;
+
+
+
+		rePlace(s, "tho", "though");
+
+		cout<<s<<endl;
+
+
+
+		rePlace(s, "through", "");
+
+		cout<<s<<endl;
+
+
+
+		return 0;
+
 	}
 
-3.5
+
+9.52
+----------  
+	
+	
+	
+	#include <stack>
+	#include <string>
+	#include <iostream>
+
+	using std::string; using std::cout; using std::endl; using std::stack;
+
+	int main()
+	{
+	    string expression{ "This is (pezy)." };
+	    bool bSeen = false;
+	    stack<char> stk;
+	    for (const auto &s : expression)
+	    {
+		if (s == '(') { bSeen = true; continue; }
+		else if (s == ')') bSeen = false;
+
+		if (bSeen) stk.push(s);
+	    }
+
+	    string repstr;
+	    while (!stk.empty())
+	    {
+		repstr += stk.top();
+		stk.pop();
+	    }
+
+	    expression.replace(expression.find("(")+1, repstr.size(), repstr);
+
+	    cout << expression << endl;
+
+	    return 0;
+	}
+
+
+10.3  
+-------  
+
+
+	#include<iostream>
+
+	#include<string>
+
+	#include<vector>
+
+	#include<algorithm>
+
+	#include<numeric>
+
+	using namespace std;
+
+
+
+	int main(int argc, char**argv)
+
+	{
+
+		int a[10] = {0,1,2,5,4,5,4,5,4,5};
+
+		vector<int> vec(a,a+10);
+
+		cout<<"元素之和为："<<accumulate(vec.begin(),vec.end(),0);
+
+
+
+		return 0;
+
+	}  
+
+
+10.15 
+---------
+
+
+	[a](int &b){cout<<a+b;}  
+
+
+10.34 
+-------
+
+
+
+	
+	int main() 
+
+	{
+
+		vector<int> v = {1,2,4,5};
+
+		vector<int>::reverse_iterator iter = v.rbegin(), rend = v.rend();
+
+		while(iter != rend)
+
+			cout << *iter++ << ' ';
+
+	    return 0;
+
+	}  
+
+
+10.42
 ------
-连接字符串  
 
-	#include <iostream>
-	#include <string>
+
+	#include<iostream>  
+
+	#include<fstream>
+
+	#include<string>  
+
+	#include<vector> 
+
+	#include<list>
+
+	#include<algorithm>  
+
+	#include<numeric>  
+
+	#include<functional>
+
+	#include<iterator>
+
 	using namespace std;
-	void main()
-	{	
-		string mystring;
-		string sumstring;
-		while (getline(cin ,mystring))
+
+	using namespace placeholders;//占位符的命名空间
+
+
+
+	int main(int argc, char**argv)  
+
+	{ 
+
+		string a[10] = {"sdc","sddc","sdec","sfdc","sdec","sdc","sdc","fsdc","sadc","fsdc"};
+
+		list<string> list1(a,a+10);
+
+		list1.sort();//使用其成员函数版本的算法，排序
+
+		list1.unique();//删除相同元素
+
+		for (auto it1 = list1.begin(); it1 != list1.end(); ++it1)
+
 		{
-			sumstring += mystring;
-			cout<<sumstring<<endl;
+
+			cout<<*it1<<" ";
+
 		}
-	}	
 
-分隔开来  
 
+
+		return 0;  
+
+	}  
+
+11.17
+----------  
+(a)合法，将v插入到c的尾部。  
+(b)不合法，set中没有push_back  
+(c)合法。  
+(d)合法。  
+
+11.38
+----------  
+单词计数程序：  
+
+
+	#include <unordered_map>
+	#include <string>
+	#include <iostream>
+
+	using namespace std;
+
+	int main()
+	{
+		unordered_map<string, size_t> word_count;
+		string word;
+		while(cin >> word)
+			++word_count[word];
+
+		for(const auto &w : word_count)
+			cout << w.first << "," << w.second << endl;
+
+		return 0;
+	}
+单词转换程序：  
+
+
+	#include <unordered_map>
 	#include <iostream>
 	#include <string>
+	#include <fstream>
+	#include <sstream>
+
 	using namespace std;
-	void main()
-	{	
-		string mystring;
-		string sumstring;
-		while (getline(cin ,mystring))
+
+	unordered_map<string, string> buildMap(ifstream &map_file)
+	{
+		unordered_map<string, string> trans_map;
+		string key;
+		string value;
+		while(map_file >> key && getline(map_file, value))
+			if(value.size() > 1)
+				trans_map[key] = value.substr(1);
+			else
+				throw runtime_error("no rule for " + key);
+		return trans_map;
+	}
+
+	const string &transform(const string &s, const unordered_map<string, string> &m)
+	{
+		auto map_it = m.find(s);
+		if(map_it != m.cend())
+			return map_it->second;
+		else
+			return s;
+	}
+
+	void word_tranform(ifstream &map_file, ifstream &input)
+	{
+		auto trans_map = buildMap(map_file);
+		// for(const auto p : trans_map)
+		// 	cout << p.first << "->" << p.second << endl;
+		string text;
+		while(getline(input, text))
 		{
-			sumstring = sumstring+mystring+" ";
-			cout<<sumstring<<endl;
+			istringstream stream(text);
+			string word;
+			bool firstword = true;
+			while(stream >> word)
+			{
+				if(firstword)
+					firstword = false;
+				else
+					cout << " ";
+				cout << transform(word, trans_map);
+			}
+			cout << endl;
 		}
 	}
 
-3.20
-----------  
-求相邻元素和
+	int main()
+	{
+		ifstream map_file("word_transformation.txt"), input("word_transformation_bad.txt");
+		word_tranform(map_file, input);
 
-	#include <iostream>
-	#include <string>
-	#include <vector>
-	using namespace std;
-	void main()
-	{	
-		vector<int> My_vector;
-		int a[10];
-		for (int i = 0;i<10;i++)
-		{
-			cin>>a[i];
-		}
-		for (int j = 0;j<10;j++)
-		{
-			My_vector.push_back(a[j]);
-		}
-		int sum[10];
-		for (int k = 0;k<10;k++)
-		{
-			sum[k] = My_vector[k] + My_vector[k+1];
-			cout<<sum[k]<<endl;
-			k++;
-		}
-	} 
-  求首尾元素和
+		return 0;
+	}
+
+13.12
+--------
+析构函数执行三次：accum，item1，item2  
+
+13.18
+-----------  
 
 
 	#include <iostream>
 	#include <string>
-	#include <vector>
-	using namespace std;
-	void main()
-	{	
-		vector<int> My_vector;
-		int a[10];
-		for (int i = 0;i<10;i++)
-		{
-			cin>>a[i];
-		}
-		for (int j = 0;j<10;j++)
-		{
-			My_vector.push_back(a[j]);
-		}
-		int sum[10];
-		for (int k = 0;k<5;k++)
-		{
-			sum[k] = My_vector[k] + My_vector[9-k];
-			cout<<sum[k]<<endl;
-		}
-	} 
 
-3.23
-----------  
+	class Employee
+	{
+	friend void print(const Employee&);
+	public:
+		Employee() { id = n; ++n; };
+		Employee(const std::string &s) { id = n; ++n; name = s; };
+	private:
+		std::string name;
+		int id;
+		static int n;
+	};
+
+	void print(const Employee &e)
+	{
+		std::cout << e.name << " " << e.id << std::endl;
+	}
+
+	int Employee::n = 0;
+
+	int main()
+	{
+		Employee a;
+		Employee b("bbb");
+
+		print(a);
+		print(b);
+
+		return 0;
+	}
+
+
+13.46
+----- 
+(a)：f()为函数的返回值，临时值，属于右值，&&  
+(b)：vi[0]为变量，属于左值，&  
+(c)：r1为变量，属于左值，&  
+(d)：右侧为表达式，属于右值，&&   
+
+13.49
+-----  
+
+
+	String& String::operator=(String&& rhs) NOEXCEPT
+
+	{
+
+		if (this != &rhs) {
+
+			free();
+
+			elements = rhs.elements;
+
+			end = rhs.end;
+
+			rhs.elements = rhs.end = nullptr;//将源对象置为可析构的状态
+
+		}
+
+		return *this;
+
+	}
+
+	String::String(String&& s) NOEXCEPT : elements(s.elements), end(s.end)
+
+	{
+
+		s.elements = s.end = nullptr;//将源对象置为可析构的状态
+
+	}
+
+
+13.58
+----- 
+
+
+	#include <vector>
 
 	#include <iostream>
-	#include <string>
-	#include <vector>
-	using namespace std;
-	void main()
-	{	
-		vector<int> text(10,5);
-		for (auto it = text.begin(); it != text.end();it++) //注意判断其是否为空
-		{
-			*it = *it * 2;
-			cout<<*it<<endl;	
-		}
-	} 
 
-6.10
+	#include <algorithm>
+
+
+
+	using std::vector;
+
+	using std::sort;
+
+
+
+	class Foo {
+
+	public:
+
+		Foo sorted()&&;
+
+		Foo sorted() const&;
+
+
+
+	private:
+
+		vector<int> data;
+
+	};
+
+
+
+	Foo Foo::sorted() &&
+
+	{
+
+		sort(data.begin(), data.end());
+
+		std::cout << "&&" << std::endl; // debug
+
+		return *this;
+
+	}
+
+
+
+	Foo Foo::sorted() const &
+
+	{
+
+		//    Foo ret(*this);
+
+		//    sort(ret.data.begin(), ret.data.end());
+
+		//    return ret;
+
+
+
+		std::cout << "const &" << std::endl; // debug
+
+
+
+		//    Foo ret(*this);
+
+		//    ret.sorted();     //13.56
+
+		//    return ret;
+
+
+
+		return Foo(*this).sorted(); //13.57
+
+	}
+
+
+
+	int main()
+
+	{
+
+		Foo().sorted(); // call "&&"
+
+		Foo f;
+
+		f.sorted(); // call "const &"
+
+	}
+
+
+14.3 
+-------
+(a)"cobble" == "stone"应用了C++语言内置版本的==，比较两个指针。  
+
+(b)svec1[0] == svec2[0]应用了string版本的重载==。  
+
+(c)svec1 = svec2应用了vector版本的重载==。  
+
+(d)svec1[0] == "stone"应用了string版本的重载==，字符串字面常量被转换成string  
+
+
+14.20
+----- 
+
+
+
+	class Sales_data
+
+	{
+
+		friend Sales_data operator+(const Sales_data &lhs, const Sales_data &rhs);
+
+	public:
+
+		Sales_data& operator+=(const Sales_data &rhs);
+
+		//其他成员
+
+	};
+
+	Sales_data operator+(const Sales_data &lhs, const Sales_data &rhs)
+
+	{
+
+		Sales_data sum = lhs;
+
+		sum += rhs;
+
+		return sum;
+
+	}
+
+	Sales_data& Sales_data::operator+=(const Sales_data &rhs)
+
+	{
+
+		units_sold += rhs.units_sold;
+
+		revenue += rhs.revenue;
+
+		return *this;
+
+	}
+
+14.38
 --------
 
-	#include<iostream>
+
+
+
+	#include <iostream>
+
+	#include <vector>
+
+	#include <string>
+
+	#include <algorithm>
+
+
+
 	using namespace std;
-	void mySWAP(int *p,int*q)
-	{       int *tmp=p;
-		p=q;
-		q=tmp;
-	}
-	int main()
+
+
+
+	class StrLenIs
+
 	{
-		int a=5,b=10;
-		int *r=&a,*s=&b;
-		cout<<"交换前: a="<<",b="<<b<<endl;
-		mySWAP(r,s);
-		cout<<"交换后: a="<<",b="<<b<<endl;
-		return 0;
-	}
 
-6.19
------------  
-(a)：函数只有一个参数，传入两个不合法.  
-(b)：合法  
-(c)：合法  
-(d)：合法  
+	public:
 
-6.39 
------ 
-(a)：非法，顶层const不影响传入函数的对象  
-(b)：非法，函数的重载必须有形参数量或者形参类型上的不同  
-(c)：两个函数是重载关系，它们的形参类型有区别  
+		StrLenIs(int len) : len(len) { }
 
-7.16
------  
-需要控制的类的相关操作—类成员的初始化、拷贝、赋值、销毁对象  
-private隐藏类的相关实现细节，实现封装。  
-访问说明符的作用域是开始知道下一个访问说明符或者类结束。不想被使用该类的程序看到的代码细节，都要private.
+		bool operator()(const string &str) { return str.length() == len; }
 
-7.27 
------ 
 
-	class Screen
-	{
+
 	private:
-		unsigned height=0,width=0;
-		usigned cursor=0;
-		string contents;
-	public:
-		Screen()=default;
-		Screen(unsigned ht,unsigned wd) :height(ht),width(wd),contents(ht*wd,' ') { }
-		Screen(unsigned ht,unsigned wd,char c)
-		   : height(ht),width(wd),contents(ht*wd,c){ }
-	public:
-		Screen&move(unsigned r,unsigned c)
-		{cursor =r*width+c;
-		return this;
-		}
-		Screen&set(char ch)
-		{contents[cursor]=ch;
-		return *this;
-		}
-		Screen&set(unsigned r,unsigned c,char ch)
-		{contents[r*width+c]=ch;
-		return *this;
-		}
-		Screen&display()
-		{cout<<contents;
-		return *this;
-	      }
+
+		int len;
+
 	};
-	
-	
-运行结果：  
-XXXXXXXXXXXXXXXXXXXX#XXXX  
-XXXXXXXXXXXXXXXXXXXX#XXXX
 
-7.49  
+
+
+	void readStr(istream &is, vector<string> &vec)
+
+	{
+
+		string word;
+
+		while (is >> word)
+
+		{
+
+			vec.push_back(word);
+
+		}
+
+	}
+
+
+
+	int main()
+
+	{
+
+		vector<string> vec;
+
+		readStr(cin, vec);
+
+		const int minLen = 1;
+
+		const int maxLen = 10;
+
+		for (int i = minLen; i <= maxLen; ++i)
+
+		{
+
+			StrLenIs slenIs(i);
+
+			cout << "len: " << i << ", cnt: " << count_if(vec.begin(), vec.end(), slenIs) << endl;
+
+		}
+
+
+
+		system("pause");
+
+		return 0;
+
+	}
+
+14.52
+----------
+对于ld=si+ld，由于LongDouble不能转换为SmallInt，因此Smallint的成员operator+和friend operator都不可行。  
+由于Smallint不能转换为LongDouble，LongDouble的成员operator+和非成员operator+也都不可行。  
+
+由于SmallInt可以转换为int， LongDouble了可以转换为float和double，所以内置的operator+(int, float)和operator+(int, double)都可行，会产生二义性。  
+
+对于ld=ld+si，类似上一个加法表达式，由于Smallint不能转换为double，LongDouble也不能转换为SmallInt，因此SmallInt的成员operator+和两个非成员operator+都不匹配。  
+
+LongDouble的成员operator+可行，且为精确匹配。  
+SmallInt可以转换为int，longDouble可以转换为float和double，因此内置的operator+(float, int)和operator(double, int)都可行。但它们都需要类型转换，因此LongDouble的成员operator+优先匹配。  
+
+15.13
+--------
+
+
+
+
+
+	#include <iostream>
+
+	#include <string>
+
+
+
+	using namespace std;
+
+
+
+	class base
+
+	{
+
+	public:
+
+		base(string szNm) : basename(szNm) { }
+
+		string name() { return basename; }
+
+		virtual void print(ostream &os) { os << basename; }
+
+	private:
+
+		string basename;
+
+	};
+
+	class derived : public base
+
+	{
+
+	public:
+
+		derived(string szName, int iVal) : base(szName), mem(iVal) { }
+
+		void print(ostream &os) { base::print(os); os << " " << mem; }
+
+	private:
+
+		int mem;
+
+	};
+
+
+
+	int main()
+
+	{
+
+		base r1("机器学习");
+
+		r1.print(cout);
+
+		derived r2("机器学习", 10);
+
+		r2.print(cout);
+
+
+
+		system("pause");
+
+		return 0;
+
+	}
+
+15.16
 -------
-(a)合法   
-(b)不合法，Salesdata&类型与Salesdata类型之间不可转换       
-(c)不合法，const不对，因为combine本身是需要改变传入参数的    
 
-7.58 
------ 
-在类的内部，rate和wec的初始化是错误的，因为除了静态常量成员之外，其他静态成员不能在类的内部初始化。另外，example.c文件的两条语句也是错误的，因为在这里我们必须给出静态成员的初始值。
+
+
+	class Limited_quote : public Disc_quote
+
+	{
+
+	public:
+
+		Limited_quote() = default;
+
+		Limited_quote(const string &book, double price, size_t qty, double disc) : 
+
+			Disc_quote(book, price, qty, disc) { }
+
+		double net_price(size_t cnt) const override
+
+		{
+
+			if (cnt <= quantity)
+
+			{
+
+				return cnt * (1 - discount) * price;
+
+			}
+
+			else
+
+			{
+
+				return quantity * (1 - discount) * price + (cnt - quantity) * price;
+
+			}
+
+		}
+
+
+
+	};
+15.30
+---------
+
+
+
+	class Basket
+
+	{
+
+	public:
+
+		void add_item(const shared_ptr<Quote> &sales)
+
+		{
+
+			items.insert(sales);
+
+		}
+
+		double total_receipt(std::ostream&) const;     // 打印每本书的总价和购物篮中所有书的总价
+
+	private:
+
+		static bool compare(const std::shared_ptr<Quote> &lhs, const std::shared_ptr<Quote> &rhs)
+
+		{
+
+			return lhs->isbn() < rhs->isbn();
+
+		}
+
+		// multiset保存多个报价，按照compare成员排序
+
+		std::multiset<std::shared_ptr<Quote>, decltype(compare)*> items{ compare };
+
+	};
+
+
+
+	double Basket::total_receipt(std::ostream &os) const
+
+	{
+
+		double sum = 0.0;
+
+
+
+		for (auto iter = items.cbegin(); iter != items.cend(); iter = items.upper_bound(*iter))
+
+		{
+
+			sum += print_total(os, **iter, items.count(*iter));
+
+		}
+
+		os << "Total Sale: " << sum << endl;
+
+		return  sum;
+
+	}
