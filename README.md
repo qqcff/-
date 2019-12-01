@@ -299,7 +299,48 @@ resize(100)会将其大小改为100个元素的大小，添加新元素并初始
 ---------
 
 
-	[a](int &b){cout<<a+b;}  
+	
+
+
+	#include <iostream>
+
+
+
+	using namespace std;
+
+
+
+	void add(int a)
+
+	{
+
+		//可调用对象
+
+		auto sum = [a](int b) { return a + b; };
+
+
+
+		cout << sum(1) << endl;
+
+	}
+
+
+
+	int main()
+
+	{
+
+		add(1);
+
+		add(2);
+
+
+
+		system("pause");
+
+		return 0;
+
+	}
 
 
 10.34 
