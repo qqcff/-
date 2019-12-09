@@ -1,7 +1,7 @@
 # 9.11
 ----------  
 
-
+```cpp
 	vector<int> vec;    // 0
 
 	vector<int> vec(10);    // 0
@@ -13,7 +13,7 @@
 	vector<int> vec(other_vec); 
 
 	vector<int> vec(other_vec.begin(), other_vec.end());  
-
+```
 
 9.20
 -------  
