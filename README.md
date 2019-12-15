@@ -1,836 +1,757 @@
-# 9.11
+# 12.1
 ----------  
 
+由于StrBlob的data成员是一个指向string的vector的shared_ptr，因此StrBlob的赋值不会拷贝vector的内容，而是多个StrBlob对象共享同一个（创建于动态内存空间上）vector对象。b1和b2共享的是底层数据，因此，b1和b2均包含4个string。  
 
-	vector<int> vec;    // 0
-
-	vector<int> vec(10);    // 0
-
-	vector<int> vec(10,1);  // 1
-
-	vector<int> vec{1,2,3,4,5}; // 1,2,3,4,5
-
-	vector<int> vec(other_vec); 
-
-	vector<int> vec(other_vec.begin(), other_vec.end());  
-
-
-9.20
+12.10
 -------  
 
+此调用是正确的，利用p创建一个临时的shared_ptr赋予process的参数ptr，p和ptr都指向相同的int对象，引用计数被正确地置为2。process执行完毕后，ptr被销毁，引用计数减1，这是正确的——只有p指向它。  
 
-	#include<iostream>
+12.15
+---------
 
-	#include<fstream>
 
-	#include<sstream>
 
-	#include<string>
+	#include <iostream>
 
-	#include<vector>
+	#include <memory>
 
-	#include<list>
 
-	#include<deque>
 
 	using namespace std;
 
 
 
-	int main(int argc, char**argv)
+	struct destination {};
+
+	struct connection {};
+
+
+
+	connection connect(destination *pd)
 
 	{
 
-		list<int> list1(5,7);
+		cout << "打开连接" << endl;
 
-		deque<int> deque1;
+		return connection();
 
-		deque<int> deque2;
-
-		list<int>::iterator it1 = list1.begin();
-
-		for (it1; it1 != list1.end(); it1++)
-
-		{
-
-			if ((*it1)%2 == 0)
-
-			{
-
-				deque1.push_back(*it1);
-
-			} 
-
-			else
-
-			{
-
-				deque2.push_back(*it1);
-
-			}
-
-		}
+	}
 
 
 
-		deque<int>::iterator it2 = deque1.begin();
+	void disconnect(connection c)
 
-		deque<int>::iterator it3 = deque2.begin();
+	{
 
-		cout<<"偶数为：";
+		cout << "关闭连接" << endl;
 
-		for (it2; it2 != deque1.end(); it2++)
-
-		{
-
-			cout<<*it2<<" ";
-
-		}
-
-		cout<<endl;
-
-		cout<<"奇数为：";
-
-		for (it3; it3 != deque2.end(); it3++)
-
-		{
-
-			cout<<*it3<<" ";
-
-		}
+	}
 
 
+
+	//未使用shared_ptr的版本
+
+	void f(destination &d)
+
+	{
+
+		cout << "直接管理connect" << endl;
+
+		connection c = connect(&d);
+
+		//忘记调用disconnect关闭连接
+
+
+
+		cout << endl;
+
+	}
+
+
+
+	//void end_connection(connection *p) { disconnect(*p); }
+
+
+
+	//使用shared_ptr的版本
+
+	void f1(destination &d)
+
+	{
+
+		cout << "用shared_ptr管理connect" << endl;
+
+		connection c = connect(&d);
+
+
+
+		shared_ptr<connection> p(&c, [](connection *p) { disconnect(*p);  });
+
+		//忘记调用disconnect关闭连接
+
+
+
+		cout << endl;
+
+	}
+
+
+
+	int main(int argc, char *argv[])
+
+	{
+
+		destination d;
+
+		f(d);
+
+
+
+		f1(d);
+
+
+
+		system("pause");
 
 		return 0;
 
-	}  
+	}
 
-9.29 
----------
-resize()改变容器的大小，多删少补并初始化，需要默认初始化的，则需要参数类型有默认构造函数。    
-resize(100)会将其大小改为100个元素的大小，添加新元素并初始化，之后使用resize(10)会将之后的90个元素舍弃。  
 
-9.43
+12.17
 -------  
 
 
 
-	
-	#include <iostream>
 
-	#include <string>
+	int ix = 1024, *pi = &ix, *pi2 = new int(2048);
+
+	typedef unique_ptr<int> IntP;
+
+	(a)IntP p0(ix);
+
+	//不合法。unique_ptr需要用一个指针初始化，无法将int转换为指针。
+
+	(b)IntP p1(pi);
+
+	//合法。可以用一个int*来初始化IntP，但此程序逻辑上是错误的。
+
+	//它用一个普通int变量的地址初始化p1,p1销毁时会释放此内存，其行为是未定义的。
+
+	(c)IntP p2(pi2);
+
+	//合法。用一个指向动态分配的对象的指针来初始化IntP是正确的。
+
+	(d)IntP p3(&ix);
+
+	//合法。但存在与(b)相同的问题。
+
+	(e)IntP p4(new int(2048));
+
+	//合法。与(c)类似。
+
+	(f)IntP p5(p2.get());
+
+	//合法。但用p2管理的对象的地址来初始化p5，造成两个unique_ptr指向相同的内存地址。
+
+	//当其中一个unique_ptr被销毁（或调用reset释放对象）时，
+
+	//该内存被释放，另一个unique_ptr变为空悬指针
+
+ 
+
+
+
+12.18
+----------  
+	
+	
+unique_ptr独占对象的所有权，不能拷贝和赋值。release操作是用来将对象的所有权转移给另一个unique_ptr的。  
+而多个shared_ptr可以共享对象的所有权。需要共享时，可以简单拷贝和赋值。因此，并不需要release这样的操作来转移所有权。  
+
+12.19 
+-------  
+
+	#ifndef MY_STRBLOB_H
+
+	#define MY_STRBLOB_H
 
 	#include <vector>
 
-	using std::cin;
+	#include <string>
 
-	using std::cout;
+	#include <initializer_list>
 
-	using std::cerr;
+	#include <memory>
 
-	using std::endl;
-
-	using std::vector;
-
-	using std::string;
+	#include <stdexcept>
 
 
 
-	void rePlace(string &s, const string &oldVal, const string &newVal)
+	using namespace std;
+
+
+
+	//对于StrBlob的友元声明来说，此前置声明是必要的
+
+	class StrBolbPtr;
+
+
+
+	class StrBlob
 
 	{
 
-		auto l = oldVal.size();
+		//友元类
 
-		if (!l)
+		friend class StrBlobPtr;
 
-			return;
+	public:
 
-		auto iter = s.begin();
+		typedef vector<string>::size_type size_type;
 
-		while (iter <= s.end()-1) {
+		StrBlob();
 
-			auto iter1 = iter;
+		StrBlob(initializer_list<string> il);
 
-			auto iter2 = oldVal.begin();
+		size_type size() const { return data->size(); }
 
-			while(iter != oldVal.end() && *iter1 == *iter2) {
+		bool empty() const { return data->empty(); }
 
-				++iter1;
+		//添加和删除元素
 
-				++iter2;
+		void push_back(const string &t) { data->push_back(t); }
 
-			}
+		void pop_back();
 
-			if(iter2 == oldVal.end()) {
+		//元素访问
 
-				iter = s.erase(iter, iter1);
+		string& front();
 
-				if (newVal.size()) {
+		const string& front() const;
 
-					iter2 = newVal.end();
+		string& back();
 
-					do {
+		const string& back() const;
 
-						--iter2;
 
-						iter = s.insert(iter, *iter2);
 
-					} while(iter2 > newVal.begin());
+		//提供给StrBlobPtr的两个接口
+
+		StrBlobPtr begin();          //定义StrBlobPtr后才能定义这两个函数
+
+		StrBlobPtr end();
+
+	private:
+
+		shared_ptr<vector<string>> data;
+
+		//如果data[i]不合法，抛出一个异常。
+
+		void check(size_type i, const string &msg) const;
+
+	};
+
+
+
+	inline StrBlob::StrBlob() : data(make_shared<vector<string>>()) { }
+
+	StrBlob::StrBlob(initializer_list<string> il) : data(make_shared<vector<string>>(il)) { }
+
+
+
+	inline void StrBlob::check(size_type i, const string &msg) const
+
+	{
+
+		if (i >= data->size())
+
+		{
+
+			throw out_of_range(msg);
+
+		}
+
+	}
+
+
+
+	inline string& StrBlob::front()
+
+	{
+
+		//如果vector为空，check会抛出一个异常
+
+		check(0, "front on empty StrBolb");
+
+		return data->front();
+
+	}
+
+
+
+	//const版本的front
+
+	inline const string& StrBlob::front() const
+
+	{
+
+		check(0, "front on empty StrBlob");
+
+		return data->front();
+
+	}
+
+
+
+	inline string& StrBlob::back()
+
+	{
+
+		check(0, "back on empty StrBlob");
+
+		return data->back();
+
+	}
+
+
+
+	//const版本的back
+
+	inline const string& StrBlob::back() const
+
+	{
+
+		check(0, "back on empty StrBlob");
+
+		return data->back();
+
+	}
+
+
+
+	inline void StrBlob::pop_back()
+
+	{
+
+		check(0, "pop_back on empty StrBlob");
+
+		return data->pop_back();
+
+	}
+
+
+
+	//当试图访问一个不存在的元素时，StrBlobPtr抛出一个异常
+
+	class StrBlobPtr
+
+	{
+
+		friend bool eq(const StrBlobPtr&, const StrBlobPtr&);
+
+	public:
+
+		StrBlobPtr() :curr(0) { }
+
+		StrBlobPtr(StrBlob &a, size_t sz = 0) :wptr(a.data), curr(sz) { }
+
+
+
+		string& deref() const;
+
+		StrBlobPtr& incr();         //前缀递增
+
+		StrBlobPtr& decr();         //前缀递减
+
+	private:
+
+		//若检查成功，check返回一个指向vector的shared_ptr
+
+		shared_ptr<vector<string>> check(size_t, const string&) const;
+
+		//保存一个weak_ptr，意味着底层vector可能会被销毁
+
+		weak_ptr<vector<string>> wptr;
+
+		size_t curr;       //在数组中的当前位置
+
+
+
+	};
+
+
+
+	inline shared_ptr<vector<string>> StrBlobPtr::check(size_t i, const string &msg) const
+
+	{
+
+		auto ret = wptr.lock();      //vector还存在吗？
+
+		if (!ret)
+
+		{
+
+			throw runtime_error("unbond StrBlobPtr");
+
+		}
+
+		if (i > ret->size())
+
+		{
+
+			throw out_of_range(msg);
+
+		}
+
+		return ret;          //否则，返回指向vector的shared_ptr
+
+	}
+
+
+
+	inline string& StrBlobPtr::deref() const
+
+	{
+
+		auto p = check(curr, "dereference past end");
+
+		return (*p)[curr];    //(*p)是对象所指向的vector
+
+	}
+
+
+
+	//前缀递增：返回递增后的对象的引用
+
+	inline StrBlobPtr& StrBlobPtr::incr()
+
+	{
+
+		//如果curr已经指向容器的尾后位置，就不能递增它
+
+		check(curr, "increment past end of StrBlobPtr");
+
+		++curr;
+
+		return *this;
+
+	}
+
+
+
+	//前缀递减：返回递增后的对象的引用
+
+	inline StrBlobPtr& StrBlobPtr::decr()
+
+	{
+
+		//如果curr已经为0，递减它就会产生一个非法下标
+
+		--curr;           //递减当前位置
+
+		check(-1, "decrement past begin of StrBlobPtr");
+
+		return *this;
+
+	}
+
+
+
+	//StrBlob的begin和end成员的定义
+
+	inline StrBlobPtr StrBlob::begin()
+
+	{
+
+		return StrBlobPtr(*this);
+
+	}
+
+
+
+	inline StrBlobPtr StrBlob::end()
+
+	{
+
+		auto ret = StrBlobPtr(*this, data->size());
+
+		return ret;
+
+	}
+
+
+
+	//StrBlobPtr的比较操作
+
+	inline bool eq(const StrBlobPtr &lhs, const StrBlobPtr &rhs)
+
+	{
+
+		auto l = lhs.wptr.lock(), r = rhs.wptr.lock();
+
+		//若底层的vector是同一个
+
+		if (l == r)
+
+		{
+
+			//则两个指针都是空，或者指向相同元素时，它们相等
+
+			return (!r || lhs.curr == rhs.curr);
+
+		}
+
+		else
+
+		{
+
+			return false;            //若指向不同vector，则不可能相等
+
+		}
+
+	}
+
+
+
+	inline bool neq(const StrBlobPtr &lhs, const StrBlobPtr &rhs)
+
+	{
+
+		return !eq(lhs, rhs);
+
+	}
+
+
+
+	#endif
+
+12.30
+---------
+
+
+	class QueryResult; //为了定义query的返回类型，这个定义是必须的
+
+	class TextQuery
+
+	{
+
+	public:
+
+		using line_no = vector<string>::size_type;
+
+		TextQuery(ifstream&);       //构造函数
+
+		QueryResult query(const string&) const;
+
+
+
+	private:
+
+		shared_ptr<vector<string>> file;  //输入文件
+
+		//每个单词到它所在行号的集合的映射
+
+		map<string, shared_ptr<set<line_no>>> wm;
+
+
+
+	};
+
+
+
+	//读取输入文件并建立单词到行号的映射
+
+	TextQuery::TextQuery(ifstream& is) : file(new vector<string>)
+
+	{
+
+		string text;
+
+		while (getline(is, text))       //对文件中每一行
+
+		{
+
+			file->push_back(text);      //保存此行文本
+
+			int n = file->size() - 1;   //当前行号
+
+			istringstream line(text);   //将行文本分解为单词
+
+			string word;
+
+			while (line >> word)        //对行中每个单词
+
+			{
+
+				//如果单词不在wm中，以之为下标在wm中添加一项
+
+				auto &lines = wm[word]; //lines是一个shared_ptr
+
+				if (!lines)            //在我们第一次遇到这个单词时，此指针为空
+
+				{
+
+					lines.reset(new set<line_no>);  //分配一个新的set
 
 				}
 
-				iter += newVal.size();
+				lines->insert(n);      //将此行号插入set中
 
 			}
 
-			else ++iter;
+		}
+
+	}
+
+	class QueryResult
+
+	{
+
+		friend ostream& print(ostream&, const QueryResult&);
+
+	public:
+
+		QueryResult(string s, shared_ptr<set<line_no>> p, shared_ptr<vector<string>> f):
+
+			sought(s), lines(p), file(f) { }
+
+	private:
+
+		string sought;     //查询单词
+
+		shared_ptr<set<line_no>> lines;
+
+		shared_ptr<vector<string>> file;
+
+	};
+
+
+
+	QueryResult TextQuery::query(const string &sought) const
+
+	{
+
+		//如果未找到sought，我们将返回一个指向次set的指针
+
+		static shared_ptr<set<line_no>> nodata(new set<line_no>);
+
+		//使用find而不是下标运算符来查找单词，避免将单词添加wm中
+
+		auto loc = wm.find(sought);
+
+		if (loc == wm.end())
+
+		{
+
+			return QueryResult(sought, nodata, file);
+
+		}
+
+		else
+
+		{
+
+			return QueryResult(sought, loc->second, file);
 
 		}
 
 	}
 
 
-
-	int main()
-
-	{
-
-		string s = "tho thru tho!";
-
-		rePlace(s, "thru", "through");
-
-		cout<<s<<endl;
-
-
-
-		rePlace(s, "tho", "though");
-
-		cout<<s<<endl;
-
-
-
-		rePlace(s, "through", "");
-
-		cout<<s<<endl;
-
-
-
-		return 0;
-
-	}
-
-
-9.52
-----------  
-	
-	
-	
-	#include <stack>
-	#include <string>
-	#include <iostream>
-
-	using std::string; using std::cout; using std::endl; using std::stack;
-
-	int main()
-	{
-	    string expression{ "This is (pezy)." };
-	    bool bSeen = false;
-	    stack<char> stk;
-	    for (const auto &s : expression)
-	    {
-		if (s == '(') { bSeen = true; continue; }
-		else if (s == ')') bSeen = false;
-
-		if (bSeen) stk.push(s);
-	    }
-
-	    string repstr;
-	    while (!stk.empty())
-	    {
-		repstr += stk.top();
-		stk.pop();
-	    }
-
-	    expression.replace(expression.find("(")+1, repstr.size(), repstr);
-
-	    cout << expression << endl;
-
-	    return 0;
-	}
-
-
-10.3  
--------  
-
-
-	#include<iostream>
-
-	#include<string>
-
-	#include<vector>
-
-	#include<algorithm>
-
-	#include<numeric>
-
-	using namespace std;
-
-
-
-	int main(int argc, char**argv)
-
-	{
-
-		int a[10] = {0,1,2,5,4,5,4,5,4,5};
-
-		vector<int> vec(a,a+10);
-
-		cout<<"元素之和为："<<accumulate(vec.begin(),vec.end(),0);
-
-
-
-		return 0;
-
-	}  
-
-
-10.15 
----------
-
-
-	
-
-
-	#include <iostream>
-
-
-
-	using namespace std;
-
-
-
-	void add(int a)
-
-	{
-
-		//可调用对象
-
-		auto sum = [a](int b) { return a + b; };
-
-
-
-		cout << sum(1) << endl;
-
-	}
-
-
-
-	int main()
-
-	{
-
-		add(1);
-
-		add(2);
-
-
-
-		system("pause");
-
-		return 0;
-
-	}
-
-
-10.34 
+16.11
 -------
 
 
 
-	
-	int main() 
+	在List类内，使用模版名不需要再加参数列表，而ListItem使用时必须加上<>模版参数列表  
 
-	{
-
-		vector<int> v = {1,2,4,5};
-
-		vector<int>::reverse_iterator iter = v.rbegin(), rend = v.rend();
-
-		while(iter != rend)
-
-			cout << *iter++ << ' ';
-
-	    return 0;
-
-	}  
-
-
-10.42
+16.12
 ------
 
-
-	#include<iostream>  
-
-	#include<fstream>
-
-	#include<string>  
-
-	#include<vector> 
-
-	#include<list>
-
-	#include<algorithm>  
-
-	#include<numeric>  
-
-	#include<functional>
-
-	#include<iterator>
-
-	using namespace std;
-
-	using namespace placeholders;//占位符的命名空间
-
-
-
-	int main(int argc, char**argv)  
-
-	{ 
-
-		string a[10] = {"sdc","sddc","sdec","sfdc","sdec","sdc","sdc","fsdc","sadc","fsdc"};
-
-		list<string> list1(a,a+10);
-
-		list1.sort();//使用其成员函数版本的算法，排序
-
-		list1.unique();//删除相同元素
-
-		for (auto it1 = list1.begin(); it1 != list1.end(); ++it1)
-
-		{
-
-			cout<<*it1<<" ";
-
-		}
-
-
-
-		return 0;  
-
-	}  
-
-11.17
-----------  
-(a)合法，将v插入到c的尾部。  
-(b)不合法，set中没有push_back  
-(c)合法。  
-(d)合法。  
-
-11.38
-----------  
-单词计数程序：  
-
-
-	#include <unordered_map>
-	#include <string>
-	#include <iostream>
-
-	using namespace std;
-
-	int main()
-	{
-		unordered_map<string, size_t> word_count;
-		string word;
-		while(cin >> word)
-			++word_count[word];
-
-		for(const auto &w : word_count)
-			cout << w.first << "," << w.second << endl;
-
-		return 0;
-	}
-单词转换程序：  
-
-
-	#include <unordered_map>
-	#include <iostream>
-	#include <string>
-	#include <fstream>
-	#include <sstream>
-
-	using namespace std;
-
-	unordered_map<string, string> buildMap(ifstream &map_file)
-	{
-		unordered_map<string, string> trans_map;
-		string key;
-		string value;
-		while(map_file >> key && getline(map_file, value))
-			if(value.size() > 1)
-				trans_map[key] = value.substr(1);
-			else
-				throw runtime_error("no rule for " + key);
-		return trans_map;
-	}
-
-	const string &transform(const string &s, const unordered_map<string, string> &m)
-	{
-		auto map_it = m.find(s);
-		if(map_it != m.cend())
-			return map_it->second;
-		else
-			return s;
-	}
-
-	void word_tranform(ifstream &map_file, ifstream &input)
-	{
-		auto trans_map = buildMap(map_file);
-		// for(const auto p : trans_map)
-		// 	cout << p.first << "->" << p.second << endl;
-		string text;
-		while(getline(input, text))
-		{
-			istringstream stream(text);
-			string word;
-			bool firstword = true;
-			while(stream >> word)
-			{
-				if(firstword)
-					firstword = false;
-				else
-					cout << " ";
-				cout << transform(word, trans_map);
-			}
-			cout << endl;
-		}
-	}
-
-	int main()
-	{
-		ifstream map_file("word_transformation.txt"), input("word_transformation_bad.txt");
-		word_tranform(map_file, input);
-
-		return 0;
-	}
-
-13.12
---------
-这段代码中会发生三次析构函数调用：  
-
-1、函数结束时，局部变量item1的生命期结束，被销毁，Sales_data的析构函数被调用。  
-
-2、类似的，item2在函数结束时被销毁，Sales_data的析构函数被调用。  
-
-3、函数结束时，参数accum的生命期结束，被销毁，Sales_data的析构函数被调用。  
-
-在函数结束时，trans的生命期也结束了，但它是Sales_data的指针，并不是它指向的Sales_data对象的生命期结束（只有delete指针时，指向的动态对象的生命期才结束），所以不会引起析构函数的调用。  
-
-
-13.18
------------  
-
-
-	#include <iostream>
-	#include <string>
-
-	class Employee
-	{
-	friend void print(const Employee&);
-	public:
-		Employee() { id = n; ++n; };
-		Employee(const std::string &s) { id = n; ++n; name = s; };
-	private:
-		std::string name;
-		int id;
-		static int n;
-	};
-
-	void print(const Employee &e)
-	{
-		std::cout << e.name << " " << e.id << std::endl;
-	}
-
-	int Employee::n = 0;
-
-	int main()
-	{
-		Employee a;
-		Employee b("bbb");
-
-		print(a);
-		print(b);
-
-		return 0;
-	}
-
-
-13.46
------ 
-1、r1必须是右值引用，因为f是返回非引用类型的函数，返回值是一个右值。  
-2、r2必须是左值引用，因为下标运算符返回的是左值。  
-3、r3只能是左值引用，因为rl是一个变量，而变量是左值。  
-4、r4只能是右值引用，因为vi[0] * f()是一个算数运算表达式，返回右值。  
-
-13.49
------  
-
-
-	String& String::operator=(String&& rhs) NOEXCEPT
+	template <typename T> class Blob 
 
 	{
-
-		if (this != &rhs) {
-
-			free();
-
-			elements = rhs.elements;
-
-			end = rhs.end;
-
-			rhs.elements = rhs.end = nullptr;//将源对象置为可析构的状态
-
-		}
-
-		return *this;
-
-	}
-
-	String::String(String&& s) NOEXCEPT : elements(s.elements), end(s.end)
-
-	{
-
-		s.elements = s.end = nullptr;//将源对象置为可析构的状态
-
-	}
-
-
-13.58
------ 
-
-
-	#include <vector>
-
-	#include <iostream>
-
-	#include <algorithm>
-
-
-
-	using std::vector;
-
-	using std::sort;
-
-
-
-	class Foo {
 
 	public:
 
-		Foo sorted()&&;
+		typedef T value_type;
 
-		Foo sorted() const&;
+		typedef typename std::vector<T>::size_type size_type;
+
+
+
+		// constructors
+
+		Blob();
+
+		Blob(std::initializer_list<T> il);
+
+
+
+
+
+		// number of elements in the Blob
+
+		size_type size() const { return data->size(); }
+
+		bool empty() const { return data->empty(); }
+
+
+
+
+
+		// add and remove elements
+
+		void push_back(const T &t) { data->push_back(t); }
+
+
+
+
+
+		void push_back(T &&t) { data->push_back(std::move(t)); }
+
+		void pop_back();
+
+
+
+
+
+		// element access
+
+		T& back();
+
+		T& operator[](size_type i); // defined in § 14.5 (p. 566)
+
+
 
 
 
 	private:
 
-		vector<int> data;
+		std::shared_ptr<std::vector<T>> data;
+
+
+
+		// throws msg if data[i] isn't valid
+
+		void check(size_type i, const std::string &msg) const;
 
 	};
-
-
-
-	Foo Foo::sorted() &&
-
-	{
-
-		sort(data.begin(), data.end());
-
-		std::cout << "&&" << std::endl; // debug
-
-		return *this;
-
-	}
-
-
-
-	Foo Foo::sorted() const &
-
-	{
-
-		//    Foo ret(*this);
-
-		//    sort(ret.data.begin(), ret.data.end());
-
-		//    return ret;
-
-
-
-		std::cout << "const &" << std::endl; // debug
-
-
-
-		//    Foo ret(*this);
-
-		//    ret.sorted();     //13.56
-
-		//    return ret;
-
-
-
-		return Foo(*this).sorted(); //13.57
-
-	}
-
-
 
 	int main()
 
 	{
 
-		Foo().sorted(); // call "&&"
 
-		Foo f;
 
-		f.sorted(); // call "const &"
+		Blob<int> ia; // empty Blob<int>
 
-	}
+		Blob<int> ia2 = { 0,1,2,3,4 }; // Blob<int> with five elements
 
 
-14.3 
--------
-(a)"cobble" == "stone"应用了C++语言内置版本的==，比较两个指针。  
-
-(b)svec1[0] == svec2[0]应用了string版本的重载==。  
-
-(c)svec1 = svec2应用了vector版本的重载==。  
-
-(d)svec1[0] == "stone"应用了string版本的重载==，字符串字面常量被转换成string  
-
-
-14.20
------ 
-
-
-
-	class Sales_data
-
-	{
-
-		friend Sales_data operator+(const Sales_data &lhs, const Sales_data &rhs);
-
-	public:
-
-		Sales_data& operator+=(const Sales_data &rhs);
-
-		//其他成员
-
-	};
-
-	Sales_data operator+(const Sales_data &lhs, const Sales_data &rhs)
-
-	{
-
-		Sales_data sum = lhs;
-
-		sum += rhs;
-
-		return sum;
-
-	}
-
-	Sales_data& Sales_data::operator+=(const Sales_data &rhs)
-
-	{
-
-		units_sold += rhs.units_sold;
-
-		revenue += rhs.revenue;
-
-		return *this;
-
-	}
-
-14.38
---------
-
-
-
-
-	#include <iostream>
-
-	#include <vector>
-
-	#include <string>
-
-	#include <algorithm>
-
-
-
-	using namespace std;
-
-
-
-	class StrLenIs
-
-	{
-
-	public:
-
-		StrLenIs(int len) : len(len) { }
-
-		bool operator()(const string &str) { return str.length() == len; }
-
-
-
-	private:
-
-		int len;
-
-	};
-
-
-
-	void readStr(istream &is, vector<string> &vec)
-
-	{
-
-		string word;
-
-		while (is >> word)
-
-		{
-
-			vec.push_back(word);
-
-		}
-
-	}
-
-
-
-	int main()
-
-	{
-
-		vector<string> vec;
-
-		readStr(cin, vec);
-
-		const int minLen = 1;
-
-		const int maxLen = 10;
-
-		for (int i = minLen; i <= maxLen; ++i)
-
-		{
-
-			StrLenIs slenIs(i);
-
-			cout << "len: " << i << ", cnt: " << count_if(vec.begin(), vec.end(), slenIs) << endl;
-
-		}
 
 
 
@@ -840,84 +761,58 @@ resize(100)会将其大小改为100个元素的大小，添加新元素并初始
 
 	}
 
-14.52
-----------
-对于ld=si+ld，由于LongDouble不能转换为SmallInt，因此Smallint的成员operator+和friend operator都不可行。  
-由于Smallint不能转换为LongDouble，LongDouble的成员operator+和非成员operator+也都不可行。  
+ 
 
-由于SmallInt可以转换为int， LongDouble了可以转换为float和double，所以内置的operator+(int, float)和operator+(int, double)都可行，会产生二义性。  
+16.19
+----------  
 
-对于ld=ld+si，类似上一个加法表达式，由于Smallint不能转换为double，LongDouble也不能转换为SmallInt，因此SmallInt的成员operator+和两个非成员operator+都不匹配。  
+	#ifndef HAVE_H
 
-LongDouble的成员operator+可行，且为精确匹配。  
-SmallInt可以转换为int，longDouble可以转换为float和double，因此内置的operator+(float, int)和operator(double, int)都可行。但它们都需要类型转换，因此LongDouble的成员operator+优先匹配。  
-
-15.13
---------
+	#define HAVE_H
 
 
 
+	template <typename T> void Have(T &t)
 
+	{
+
+		for (size_t i = 0; i < t.size(); ++i)
+
+		{
+
+			cout<<t[i]<<endl;
+
+		}
+
+	}
+
+	#endif HAVE_H
 
 	#include <iostream>
 
+	#include <vector>
+
+	#include <list>
+
 	#include <string>
 
-
+	#include "Have.h"
 
 	using namespace std;
 
 
 
-	class base
+	int main(int argc,char** argv)
 
 	{
 
-	public:
+		vector<int> vec1;
 
-		base(string szNm) : basename(szNm) { }
+		vec1.push_back(2);
 
-		string name() { return basename; }
+		vec1.push_back(3);
 
-		virtual void print(ostream &os) { os << basename; }
-
-	private:
-
-		string basename;
-
-	};
-
-	class derived : public base
-
-	{
-
-	public:
-
-		derived(string szName, int iVal) : base(szName), mem(iVal) { }
-
-		void print(ostream &os) { base::print(os); os << " " << mem; }
-
-	private:
-
-		int mem;
-
-	};
-
-
-
-	int main()
-
-	{
-
-		base r1("机器学习");
-
-		r1.print(cout);
-
-		derived r2("机器学习", 10);
-
-		r2.print(cout);
-
-
+		Have(vec1);
 
 		system("pause");
 
@@ -925,105 +820,152 @@ SmallInt可以转换为int，longDouble可以转换为float和double，因此内
 
 	}
 
-15.16
--------
+
+16.41
+----------  
+
+	#ifndef REU_TYPE_H
+
+	#define REU_TYPE_H
 
 
 
-	class Limited_quote : public Disc_quote
-
-	{
-
-	public:
-
-		Limited_quote() = default;
-
-		Limited_quote(const string &book, double price, size_t qty, double disc) : 
-
-			Disc_quote(book, price, qty, disc) { }
-
-		double net_price(size_t cnt) const override
-
-		{
-
-			if (cnt <= quantity)
-
-			{
-
-				return cnt * (1 - discount) * price;
-
-			}
-
-			else
-
-			{
-
-				return quantity * (1 - discount) * price + (cnt - quantity) * price;
-
-			}
-
-		}
-
-
-
-	};
-15.30
----------
-
-
-
-	class Basket
+	template <typename T> auto sum(const T&a,const T&b) ->decltype(a+b)//将函数的返回类型指定为a+b的类型
 
 	{
 
-	public:
-
-		void add_item(const shared_ptr<Quote> &sales)
-
-		{
-
-			items.insert(sales);
-
-		}
-
-		double total_receipt(std::ostream&) const;     // 打印每本书的总价和购物篮中所有书的总价
-
-	private:
-
-		static bool compare(const std::shared_ptr<Quote> &lhs, const std::shared_ptr<Quote> &rhs)
-
-		{
-
-			return lhs->isbn() < rhs->isbn();
-
-		}
-
-		// multiset保存多个报价，按照compare成员排序
-
-		std::multiset<std::shared_ptr<Quote>, decltype(compare)*> items{ compare };
-
-	};
-
-
-
-	double Basket::total_receipt(std::ostream &os) const
-
-	{
-
-		double sum = 0.0;
-
-
-
-		for (auto iter = items.cbegin(); iter != items.cend(); iter = items.upper_bound(*iter))
-
-		{
-
-			sum += print_total(os, **iter, items.count(*iter));
-
-		}
-
-		os << "Total Sale: " << sum << endl;
-
-		return  sum;
+		return a+b;
 
 	}
+
+	#endif REU_TYPE_H
+
+	#include <iostream>
+
+	#include <vector>
+
+	#include <list>
+
+	#include <string>
+
+	#include "Reu_type.h"
+
+	using namespace std;
+
+
+
+
+
+	int main(int argc,char** argv)
+
+	{
+
+		int a = 566669;
+
+		int b = 595955;
+
+		cout<<sum(a,b);
+
+		cin.get();
+
+		return 0;
+
+	}
+
+
+16.62
+--------
+
+	#ifndef SHOW_TIMES_H
+
+	#define SHOW_TIMES_H
+
+
+
+	template<typename T, typename U> int show_times(const T& vec,const U& val)
+
+	{
+
+		int showtimes = 0;
+
+		for (size_t i = 0; i < vec.size(); ++i)
+
+		{
+
+			if(vec[i] == val)
+
+			{
+
+				++showtimes;
+
+			}
+
+		}
+
+		return showtimes;
+
+	}
+
+	#endif SHOW_TIMES_H
+
+
+
+	#include <iostream>
+
+	#include <vector>
+
+	#include <list>
+
+	#include <string>
+
+	#include "show_times.h"
+
+	using namespace std;
+
+
+
+	int main(int argc,char** argv)
+
+	{
+
+		vector<int> vec1;
+
+		vec1.push_back(1);
+
+		vec1.push_back(2);
+
+		int a = 1;
+
+		cout<<a<<"出现次数为："<<show_times(vec1,a)<<endl;
+
+
+
+		vector<double> vec2;
+
+		vec2.push_back(1.2);
+
+		vec2.push_back(2.4);
+
+		double b = 1.2;
+
+		cout<<b<<"出现次数为："<<show_times(vec2,b)<<endl;
+
+
+
+		vector<string> vec3;
+
+		vec3.push_back(string("123"));
+
+		vec3.push_back(string("23"));
+
+		string c = "123";
+
+		cout<<c<<"出现次数为："<<show_times(vec3,c)<<endl;
+
+		cin.get();
+
+		return 0;
+
+	}
+
+
