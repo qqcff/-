@@ -1,15 +1,20 @@
-#修改代码
+# step1 #  
+## 修改代码 ##  
 
-![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201555.png)
+![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201555.png)  
 
-#build成功
+# step2 #  
+## build成功 ##  
 
-![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201735.png)
+![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201735.png)  
 
-#make
+# step3 #  
+##  make ##  
 
-![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201843.png)
+![image](https://github.com/qqcff/-/blob/master/images/QQ截图20191228201843.png)  
 
-#git status  git diff
+# step4 #  
+## git status  git diff ##  
 
-![images](https://github.com/qqcff/-/blob/master/images/QQ截图20191228202048.png)
+![images](https://github.com/qqcff/-/blob/master/images/QQ截图20191228202048.png)  
+ 
